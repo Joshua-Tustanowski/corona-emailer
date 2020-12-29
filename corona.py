@@ -30,11 +30,11 @@ class coronavirus():
             total_data = extract_data_fields(table.text.split(' '))
             country_data = extract_data_fields(country_element.text.split(' ')[1:])
             self.driver.close()
-
             return country_data
         except Exception as ex:
             print(f'[Error] Failed to scrape the page {ex}')
             self.driver.quit()
+            return {}
 
     def send_email(self, country_element, total_cases, new_cases, total_deaths, new_deaths, active_cases, total_recovered, serious_critical):
         try:

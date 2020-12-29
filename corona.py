@@ -1,8 +1,17 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
 import smtplib
 import config
+
+DEBUG = False
+
+
+def extract_data_fields(row):
+    columns = ['country_element', 'total_cases', 'new_cases', 'total_deaths', 'new_deaths', 'active_cases',
+               'total_recovered', 'serious_critical']
+    return {column: row[i] for i, column in enumerate(columns)}
 
 class coronavirus():
     def __init__(self) :
@@ -12,48 +21,20 @@ class coronavirus():
         self.user = config.EMAIL_ADDRESS
         self.password = config.PASSWORD
 
-    def get_data(self):
+    def get_data(self, country: str):
         try:
             self.driver.get('https://www.worldometers.info/coronavirus/')
             table = self.driver.find_element_by_xpath('//*[@id="main_table_countries_today"]/tbody[1]')
-            country_element = table.find_element_by_xpath('//a[contains(text(), "Bhutan")]/./.././..')
+            country_element = table.find_element_by_xpath(f"//a[contains(text(), '{country}')]/./.././..")
 
-            data = table.text.split(" ")
-
-            country_element = data[0]
-            total_cases = data[1]
-            new_cases = data[2]
-            total_deaths = data[3]
-            new_deaths = data[4]
-            active_cases = data[5]
-            total_recovered = data[6]
-            serious_critical = data[7]
+            total_data = extract_data_fields(table.text.split(' '))
+            country_data = extract_data_fields(country_element.text.split(' ')[1:])
             self.driver.close()
-            if DEBUG:
-                print("Sucessfully scraped")
-                print("Country: " + country_element)
-                print("Total cases: " + total_cases)
-                print("New cases: " + new_cases)
-                print("Total deaths: " + total_deaths)
-                print("New deaths: " + new_deaths)
-                print("Active cases: " + active_cases)
-                print("Total recovered: " + total_recovered)
-                print("Serious, critical cases: " + serious_critical)
 
-            return {
-                'country_element': country_element,
-                'total_cases': total_cases,
-                'new_cases': new_cases,
-                'total_deaths': total_deaths,
-                'new_deaths': new_deaths,
-                'active_cases': active_cases,
-                'total_recovered': total_recovered,
-                'serious_critical': serious_critical
-            }
+            return country_data
         except Exception as ex:
-            print("something went wrong")
+            print(f'[Error] Failed to scrape the page {ex}')
             self.driver.quit()
-            raise ex
 
     def send_email(self, country_element, total_cases, new_cases, total_deaths, new_deaths, active_cases, total_recovered, serious_critical):
         try:
@@ -61,8 +42,9 @@ class coronavirus():
             server.ehlo()
             server.starttls()
             server.login(self.user, self.password)
-            print('Login details: {self.user} \t {self.password}')
-
+            url = 'https://www.worldometers.info/coronavirus/'
+            if country_element != 'World':
+                url = f'{url}/country/{country_element}/'
             subject = 'Coronavirus statistics in your country today!'
 
             body = f'Today in {country_element}\n'
@@ -74,7 +56,7 @@ class coronavirus():
             body += f'Active cases: {active_cases}\n'
             body += f'Total recovered: {total_recovered}\n'
             body += f'Serious, critical cases: {serious_critical}\n'
-            body += "Check the link: https://www.worldometer.info/coronavirus/\n"
+            body += f'Check the link: {url}\n'
 
             message = 'Subject: {0}\n\n{1}'.format(subject, body)
             if DEBUG:
@@ -88,6 +70,7 @@ class coronavirus():
             raise ex
 
 if __name__ == '__main__':
+    # add argparsers here for choosing a country
     corona_email_client = coronavirus()
-    data = corona_email_client.get_data()
+    data = corona_email_client.get_data('Germany')
     corona_email_client.send_email(**data)

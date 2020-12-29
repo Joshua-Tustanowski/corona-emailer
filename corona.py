@@ -4,8 +4,6 @@ from selenium.webdriver.chrome.options import Options
 import smtplib
 import config
 
-DEBUG = True
-
 class coronavirus():
     def __init__(self) :
         self.options = Options()

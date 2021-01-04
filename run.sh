@@ -1,3 +1,3 @@
 #! bin/bash
 conda activate corona
-python corona.py
+python corona.py --country UK

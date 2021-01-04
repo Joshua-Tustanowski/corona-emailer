@@ -1,19 +1,36 @@
+import argparse
+
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
-
 import smtplib
+
 import config
+from scraper import get_daily_data
 
 DEBUG = False
 
+# NB: We can consume an external API to fetch this exact data from worldometer.info:
+# https://github.com/javieraviles/covidAPI
+
+
+def main(country):
+    email_client = CoronavirusEmailer()
+    covid_data = get_daily_covid_data(country)
+    email_client.send_email(country, **covid_data)
+
 
 def extract_data_fields(row):
-    columns = ['country_element', 'total_cases', 'new_cases', 'total_deaths', 'new_deaths', 'active_cases',
+    columns = ['total_cases', 'new_cases', 'total_deaths', 'new_deaths', 'active_cases',
                'total_recovered', 'serious_critical']
     return {column: row[i] for i, column in enumerate(columns)}
 
-class coronavirus():
+
+def get_daily_covid_data(country):
+    return extract_data_fields(get_daily_data(country))
+
+
+class CoronavirusEmailer():
     def __init__(self) :
         self.options = Options()
         self.options.headless = True
@@ -26,8 +43,6 @@ class coronavirus():
             self.driver.get('https://www.worldometers.info/coronavirus/')
             table = self.driver.find_element_by_xpath('//*[@id="main_table_countries_today"]/tbody[1]')
             country_element = table.find_element_by_xpath(f"//a[contains(text(), '{country}')]/./.././..")
-
-            total_data = extract_data_fields(table.text.split(' '))
             country_data = extract_data_fields(country_element.text.split(' ')[1:])
             self.driver.close()
             return country_data
@@ -36,18 +51,19 @@ class coronavirus():
             self.driver.quit()
             return {}
 
-    def send_email(self, country_element, total_cases, new_cases, total_deaths, new_deaths, active_cases, total_recovered, serious_critical):
+    def send_email(self, country_code, total_cases, new_cases, total_deaths, new_deaths, active_cases, total_recovered,
+                   serious_critical):
         try:
             server = smtplib.SMTP('smtp.gmail.com', 587)
             server.ehlo()
             server.starttls()
             server.login(self.user, self.password)
-            url = 'https://www.worldometers.info/coronavirus/'
-            if country_element != 'World':
-                url = f'{url}/country/{country_element}/'
+            url = 'https://www.worldometers.info/coronavirus'
+            if country_code != 'World':
+                url = f'{url}/country/{country_code}/'
             subject = 'Coronavirus statistics in your country today!'
 
-            body = f'Today in {country_element}\n'
+            body = f'Today in {country_code}\n'
             body += 'There is new data on the coronavirus:\n'
             body += f'Total cases: {total_cases}\n'
             body += f'New cases: {new_cases}\n'
@@ -69,8 +85,9 @@ class coronavirus():
             print("[ERROR] couldn't email")
             raise ex
 
+
 if __name__ == '__main__':
-    # add argparsers here for choosing a country
-    corona_email_client = coronavirus()
-    data = corona_email_client.get_data('Germany')
-    corona_email_client.send_email(**data)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--country', help='select a country to get covid data on')
+    args = parser.parse_args()
+    main(args.country)

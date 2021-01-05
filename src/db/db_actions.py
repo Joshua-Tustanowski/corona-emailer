@@ -22,7 +22,9 @@ def populate_country_data(dbsess: Session) -> None:
 
 
 def process_country_data(
-    dbsess: Session, country: str, country_data: List[str]
+    dbsess: Session,
+    country: str,
+    country_data: List[str],
 ) -> CountryData:
     data = process_raw_data(country_data)
     res = CountryData(**data)
@@ -35,7 +37,7 @@ def process_country_data(
 
 def process_raw_data(country_data: List[str]) -> Dict[str, int]:
     _raw_data = list(
-        map(lambda x: x.replace(",", "").replace("+", "").strip(), country_data)
+        map(lambda x: x.replace(",", "").replace("+", "").strip(), country_data),
     )
     _raw_data = [
         float(res) if (len(res) > 0 and res != "N/A") else 0 for res in _raw_data

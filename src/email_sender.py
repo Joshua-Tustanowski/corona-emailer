@@ -5,13 +5,10 @@ from selenium.webdriver.chrome.options import Options
 
 import smtplib
 
-import config
-from scraper import get_daily_data
+from src.db import config
+from src.datamanagers.scraper import get_daily_data_for_country
 
 DEBUG = False
-
-# NB: We can consume an external API to fetch this exact data from worldometer.info:
-# https://github.com/javieraviles/covidAPI
 
 
 def main(country):
@@ -27,7 +24,7 @@ def extract_data_fields(row):
 
 
 def get_daily_covid_data(country):
-    return extract_data_fields(get_daily_data(country))
+    return extract_data_fields(get_daily_data_for_country(country))
 
 
 class CoronavirusEmailer():

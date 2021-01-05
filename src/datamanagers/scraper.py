@@ -2,10 +2,10 @@ import argparse
 
 from bs4 import BeautifulSoup
 import requests
-from typing import List
+from typing import Dict, List
 
 
-def get_daily_data(country: str) -> List[str]:
+def get_all_daily_data() -> Dict[str, List[str]]:
     html = requests.get('https://www.worldometers.info/coronavirus/')
     soup = BeautifulSoup(html.text, 'html.parser')
 
@@ -17,6 +17,11 @@ def get_daily_data(country: str) -> List[str]:
         country_key = res[1].replace('\n', '')
         cases_info = res[2:15]
         results[country_key] = cases_info
+    return results
+
+
+def get_daily_data_for_country(country: str) -> List[str]:
+    results = get_all_daily_data()
     try:
         country_data = results[country]
     except KeyError:
@@ -28,5 +33,3 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--country', help='select a country to get covid data on')
     args = parser.parse_args()
-
-    results = get_daily_data(args.country)

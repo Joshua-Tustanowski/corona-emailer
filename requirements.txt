@@ -3,3 +3,4 @@ requests
 selenium
 sqlalchemy
 mysqlclient
+fastapi

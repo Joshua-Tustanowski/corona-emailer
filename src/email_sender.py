@@ -5,8 +5,8 @@ from selenium.webdriver.chrome.options import Options
 
 import smtplib
 
-from src.db import config
-from src.datamanagers.scraper import get_daily_data_for_country
+from db import config
+from datamanagers import get_daily_data_for_country
 
 DEBUG = False
 

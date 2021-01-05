@@ -3,8 +3,8 @@ from typing import Dict, List
 
 from sqlalchemy.orm import Session
 
-from src.datamanagers.scraper import get_all_daily_data
-from src.db.models import Countries, CountryData, create_dbsess
+from datamanagers import get_all_daily_data
+from .models import Countries, CountryData, create_dbsess
 
 
 def populate_country_data(dbsess: Session) -> None:

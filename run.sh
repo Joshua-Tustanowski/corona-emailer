@@ -1,3 +1,5 @@
-#! bin/bash
+#!/bin/bash
+# cron job //
+cd ~/Desktop/code/corona-emailer/src
 conda activate corona
-python corona.py --country UK
+python email_sender.py --country UK
